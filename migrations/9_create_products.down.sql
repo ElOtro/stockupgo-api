@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS products CASCADE;
+DROP INDEX IF EXISTS products_uuid_index;
