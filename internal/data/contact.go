@@ -22,7 +22,6 @@ type Contact struct {
 	Sign        *string    `json:"sign,omitempty"`
 	CompanyID   int64      `json:"company_id,omitempty"`
 	UserID      int64      `json:"user_id,omitempty"`
-	UUID        string     `json:"uuid,omitempty"`
 	DestroyedAt *time.Time `json:"destroyed_at,omitempty"`
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`

@@ -33,7 +33,6 @@ type Organisation struct {
 	CFOSign            *string              `json:"cfo_sign,omitempty"`
 	IsVatPayer         bool                 `json:"is_vat_payer,omitempty"`
 	Details            *OrganisationDetails `json:"details,omitempty"`
-	UUID               string               `json:"uuid,omitempty"`
 	DestroyedAt        *time.Time           `json:"destroyed_at,omitempty"`
 	CreatedAt          *time.Time           `json:"created_at,omitempty"`
 	UpdatedAt          *time.Time           `json:"updated_at,omitempty"`
@@ -123,7 +122,7 @@ func (m OrganisationModel) Insert(organisation *Organisation) error {
 			name, full_name, ceo, ceo_title, cfo, cfo_title, stamp, ceo_sign, cfo_sign, is_vat_payer, 
 			details) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, name, full_name, ceo, ceo_title, cfo, cfo_title, stamp, ceo_sign, cfo_sign, is_vat_payer, 
-		          details, uuid, created_at, updated_at`
+		          details, created_at, updated_at`
 
 	args := []interface{}{
 		organisation.Name,
@@ -145,7 +144,7 @@ func (m OrganisationModel) Insert(organisation *Organisation) error {
 	return m.DB.QueryRow(context.Background(), query, args...).Scan(&organisation.ID, &organisation.Name,
 		&organisation.FullName, &organisation.CEO, &organisation.CEOTitle, &organisation.CFO,
 		&organisation.CFOTitle, &organisation.Stamp, &organisation.CEOSign, &organisation.CFOSign,
-		&organisation.IsVatPayer, &organisation.Details, &organisation.UUID, &organisation.CreatedAt,
+		&organisation.IsVatPayer, &organisation.Details, &organisation.CreatedAt,
 		&organisation.UpdatedAt,
 	)
 }
@@ -163,7 +162,7 @@ func (m OrganisationModel) Get(id int64) (*Organisation, error) {
 	// Define the SQL query for retrieving data.
 	query := `
 		SELECT id, name, full_name, ceo, ceo_title, cfo, cfo_title, stamp, ceo_sign, cfo_sign, is_vat_payer, 
-		details, uuid, created_at, updated_at, 
+		details, created_at, updated_at, 
 		(SELECT row_to_json(oba)
 		 FROM
 		 (SELECT id, name
@@ -197,7 +196,6 @@ func (m OrganisationModel) Get(id int64) (*Organisation, error) {
 		&organisation.CFOSign,
 		&organisation.IsVatPayer,
 		&organisation.Details,
-		&organisation.UUID,
 		&organisation.CreatedAt,
 		&organisation.UpdatedAt,
 		&organisation.DefaultBankAccount,

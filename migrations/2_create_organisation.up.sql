@@ -16,5 +16,3 @@ CREATE TABLE organisations (
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) without time zone NOT NULL DEFAULT NOW()  
 );
-
-CREATE INDEX IF NOT EXISTS organisations_uuid_index ON organisations USING btree (uuid);

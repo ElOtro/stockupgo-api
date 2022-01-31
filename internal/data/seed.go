@@ -160,57 +160,47 @@ func (s Seed) CreateUnits() error {
 // Create fake company.
 func (s Seed) CreateCompanies() error {
 
-	organisationIDs, err := s.Helper.pluckIDs("organisations")
-	if err != nil {
-		s.Logger.Err(err)
-	}
+	for i := 0; i < 10; i++ {
 
-	for _, o := range organisationIDs {
+		input := faker.NewCompany()
+		company := Company{
+			Name:        input.Name,
+			FullName:    input.FullName,
+			CompanyType: 1,
+			Details: &CompanyDetails{
+				INN:     input.INN,
+				KPP:     input.INN,
+				OGRN:    input.INN,
+				Address: input.Address,
+			},
+		}
 
-		for i := 0; i < 5; i++ {
+		// Initialize a new Validator instance.
+		v := validator.New()
 
-			input := faker.NewCompany()
-			company := Company{
-				OrganisationID: o,
-				Name:           input.Name,
-				FullName:       input.FullName,
-				CompanyType:    1,
-				Details: &CompanyDetails{
-					INN:     input.INN,
-					KPP:     input.INN,
-					OGRN:    input.INN,
-					Address: input.Address,
-				},
-			}
-
-			// Initialize a new Validator instance.
-			v := validator.New()
-
-			// Call the validate function and return a response containing the errors if
-			// any of the checks fail.
-			if ValidateCompany(v, &company); !v.Valid() {
-				for _, err := range v.Errors {
-					s.Logger.Info().Msg(err)
-				}
-			}
-
-			err := s.Companies.Insert(&company)
-			if err != nil {
-				s.Logger.Err(err)
-			}
-
-			if company.ID > 0 {
-				err = s.CreateContacts(company.ID)
-				if err != nil {
-					s.Logger.Err(err)
-				}
-				err = s.CreateAgreements(company.ID)
-				if err != nil {
-					s.Logger.Err(err)
-				}
+		// Call the validate function and return a response containing the errors if
+		// any of the checks fail.
+		if ValidateCompany(v, &company); !v.Valid() {
+			for _, err := range v.Errors {
+				s.Logger.Info().Msg(err)
 			}
 		}
 
+		err := s.Companies.Insert(&company)
+		if err != nil {
+			s.Logger.Err(err)
+		}
+
+		if company.ID > 0 {
+			err = s.CreateContacts(company.ID)
+			if err != nil {
+				s.Logger.Err(err)
+			}
+			err = s.CreateAgreements(company.ID)
+			if err != nil {
+				s.Logger.Err(err)
+			}
+		}
 	}
 
 	return nil
@@ -347,7 +337,7 @@ func (s Seed) CreateInvoices() error {
 
 	for _, organisationID := range organisationIDs {
 		invoiceNumber := 0
-		filters := CompanyFilters{OrganisationID: organisationID}
+		filters := CompanyFilters{Name: ""}
 		pagination := Pagination{Page: 1, Limit: 1000, Sort: "id", SortSafelist: []string{"id"}}
 		companies, _, err := s.Companies.GetAll(filters, pagination)
 		if err != nil {
@@ -368,7 +358,7 @@ func (s Seed) CreateInvoices() error {
 			for i := 0; i < 5; i++ {
 				invoiceNumber += 1
 				// get bank_accounts
-				bankAccounts, err := s.BankAccounts.GetAll(v.OrganisationID)
+				bankAccounts, err := s.BankAccounts.GetAll(organisationID)
 				if err != nil {
 					return err
 				}
@@ -383,7 +373,7 @@ func (s Seed) CreateInvoices() error {
 					IsActive:       true,
 					Date:           time.Now(),
 					Number:         strconv.Itoa(invoiceNumber),
-					OrganisationID: v.OrganisationID,
+					OrganisationID: organisationID,
 					CompanyID:      v.ID,
 					AgreementID:    agreement.ID,
 				}

@@ -22,20 +22,18 @@ type CompanyDetails struct {
 
 // Company type
 type Company struct {
-	ID             int64           `json:"id"`
-	OrganisationID int64           `json:"organisation_id,omitempty"`
-	Logo           *string         `json:"logo,omitempty"`
-	Name           string          `json:"name"`
-	FullName       string          `json:"full_name,omitempty"`
-	CompanyType    int             `json:"company_type,omitempty"`
-	Details        *CompanyDetails `json:"details,omitempty"`
-	UserID         *int64          `json:"user_id,omitempty"`
-	UUID           string          `json:"uuid,omitempty"`
-	DestroyedAt    *time.Time      `json:"destroyed_at,omitempty"`
-	CreatedAt      *time.Time      `json:"created_at,omitempty"`
-	UpdatedAt      *time.Time      `json:"updated_at,omitempty"`
-	Organisation   *Organisation   `json:"organisation,omitempty"`
-	Contacts       []*Contact      `json:"contacts,omitempty"`
+	ID           int64           `json:"id"`
+	Logo         *string         `json:"logo,omitempty"`
+	Name         string          `json:"name"`
+	FullName     string          `json:"full_name,omitempty"`
+	CompanyType  int             `json:"company_type,omitempty"`
+	Details      *CompanyDetails `json:"details,omitempty"`
+	UserID       *int64          `json:"user_id,omitempty"`
+	DestroyedAt  *time.Time      `json:"destroyed_at,omitempty"`
+	CreatedAt    *time.Time      `json:"created_at,omitempty"`
+	UpdatedAt    *time.Time      `json:"updated_at,omitempty"`
+	Organisation *Organisation   `json:"organisation,omitempty"`
+	Contacts     []*Contact      `json:"contacts,omitempty"`
 }
 
 // CompanySearch  type
@@ -45,12 +43,10 @@ type CompanySearch struct {
 }
 
 type CompanyFilters struct {
-	OrganisationID int64
-	Name           string
+	Name string
 }
 
 func ValidateCompany(v *validator.Validator, company *Company) {
-	v.Check(company.OrganisationID != 0, "organisation_id", "must be provided")
 	v.Check(company.Name != "", "name", "must be provided")
 	v.Check(company.CompanyType != 0, "company_type", "must be provided")
 }
@@ -64,11 +60,6 @@ func (m CompanyModel) GetAll(filters CompanyFilters, pagination Pagination) ([]*
 	// Construct the SQL query to retrieve all movie records.
 	queryElements := []string{}
 	filterQuery := ""
-	q := ""
-	if filters.OrganisationID > 0 {
-		q = fmt.Sprintf("organisation_id = %d", filters.OrganisationID)
-		queryElements = append(queryElements, q)
-	}
 
 	if len(queryElements) > 0 {
 		filterQuery = " WHERE " + strings.Join(queryElements, " AND ") + " "
@@ -76,8 +67,7 @@ func (m CompanyModel) GetAll(filters CompanyFilters, pagination Pagination) ([]*
 
 	// Construct the SQL query to retrieve all movie records.
 	query := fmt.Sprintf(`
-		SELECT id, logo, name, full_name, company_type, details, user_id, uuid, created_at, updated_at,
-		(SELECT row_to_json(row) FROM (SELECT id, name FROM organisations WHERE organisations.id = organisation_id) row) AS organisation 
+		SELECT id, logo, name, full_name, company_type, details, user_id, created_at, updated_at
 		FROM companies
 		%s
 		ORDER BY %s %s
@@ -115,10 +105,8 @@ func (m CompanyModel) GetAll(filters CompanyFilters, pagination Pagination) ([]*
 			&company.CompanyType,
 			&company.Details,
 			&company.UserID,
-			&company.UUID,
 			&company.CreatedAt,
 			&company.UpdatedAt,
-			&company.Organisation,
 		)
 		if err != nil {
 			return nil, Metadata{}, err
@@ -152,10 +140,6 @@ func (m CompanyModel) Search(filters CompanyFilters) ([]*CompanySearch, error) {
 	queryElements := []string{}
 	filterQuery := ""
 	q := ""
-	if filters.OrganisationID > 0 {
-		q = fmt.Sprintf("organisation_id = %d", filters.OrganisationID)
-		queryElements = append(queryElements, q)
-	}
 
 	if filters.Name != "" {
 		q = fmt.Sprintf("(to_tsvector('simple', name) @@ plainto_tsquery('simple', '%s') OR name = '')", filters.Name)
@@ -219,11 +203,10 @@ func (m CompanyModel) Insert(company *Company) error {
 	// Define the SQL query for inserting a new record
 	query := `
 		INSERT INTO companies (
-			organisation_id, name, full_name, company_type, details) VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, organisation_id, name, full_name, company_type, details, uuid, created_at, updated_at`
+			name, full_name, company_type, details) VALUES ($1, $2, $3, $4)
+		RETURNING id, name, full_name, company_type, details, created_at, updated_at`
 
 	args := []interface{}{
-		company.OrganisationID,
 		company.Name,
 		company.FullName,
 		company.CompanyType,
@@ -233,12 +216,10 @@ func (m CompanyModel) Insert(company *Company) error {
 	// Use the QueryRow() method to execute the SQL query on our connection pool
 	return m.DB.QueryRow(context.Background(), query, args...).Scan(
 		&company.ID,
-		&company.OrganisationID,
 		&company.Name,
 		&company.FullName,
 		&company.CompanyType,
 		&company.Details,
-		&company.UUID,
 		&company.CreatedAt,
 		&company.UpdatedAt,
 	)
@@ -256,7 +237,7 @@ func (m CompanyModel) Get(id int64) (*Company, error) {
 
 	// Define the SQL query for retrieving data.
 	query := `
-		SELECT id, organisation_id, name, full_name, company_type, details, uuid, created_at, updated_at 
+		SELECT id, name, full_name, company_type, details, created_at, updated_at 
 		FROM companies WHERE id = $1`
 
 	// Declare a Company struct to hold the data returned by the query.
@@ -271,12 +252,10 @@ func (m CompanyModel) Get(id int64) (*Company, error) {
 	// Execute the query using the QueryRow() method, passing in the provided id value
 	err := m.DB.QueryRow(ctx, query, id).Scan(
 		&company.ID,
-		&company.OrganisationID,
 		&company.Name,
 		&company.FullName,
 		&company.CompanyType,
 		&company.Details,
-		&company.UUID,
 		&company.CreatedAt,
 		&company.UpdatedAt,
 	)
@@ -300,13 +279,12 @@ func (m CompanyModel) Get(id int64) (*Company, error) {
 func (m CompanyModel) Update(company *Company) error {
 	query := `
 		UPDATE companies
-		SET organisation_id = $1, logo = $2, name = $3, full_name = $4, company_type = $5, details = $6, updated_at = NOW() 
+		SET logo = $2, name = $3, full_name = $4, company_type = $5, details = $6, updated_at = NOW() 
 		WHERE id = $7
 		RETURNING updated_at`
 
 	// Create an args slice containing the values for the placeholder parameters.
 	args := []interface{}{
-		company.OrganisationID,
 		company.Logo,
 		company.Name,
 		company.FullName,

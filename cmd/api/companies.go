@@ -25,7 +25,6 @@ func (app *application) listCompaniesHandler(w http.ResponseWriter, r *http.Requ
 	// Call r.URL.Query() to get the url.Values map containing the query string data.
 	qs := r.URL.Query()
 
-	input.CompanyFilters.OrganisationID = app.readInt64(qs, "organisation_id", 0, v)
 	// Read the page and limit query string values into the embedded struct.
 	input.Pagination.Page = app.readInt(qs, "page", 1, v)
 	input.Pagination.Limit = app.readInt(qs, "limit", 20, v)
@@ -69,12 +68,9 @@ func (app *application) searchCompaniesHandler(w http.ResponseWriter, r *http.Re
 		data.CompanyFilters
 	}
 
-	// Initialize a new Validator instance.
-	v := validator.New()
 	// Call r.URL.Query() to get the url.Values map containing the query string data.
 	qs := r.URL.Query()
 
-	input.CompanyFilters.OrganisationID = app.readInt64(qs, "organisation_id", 0, v)
 	input.CompanyFilters.Name = app.readString(qs, "q", "")
 
 	// Call the GetAll() method to retrieve the companies, passing in the various filter
@@ -115,11 +111,10 @@ func (app *application) createCompanyHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	company := &data.Company{
-		OrganisationID: input.OrganisationID,
-		Name:           input.Name,
-		FullName:       input.FullName,
-		CompanyType:    input.CompanyType,
-		Details:        &input.Details,
+		Name:        input.Name,
+		FullName:    input.FullName,
+		CompanyType: input.CompanyType,
+		Details:     &input.Details,
 	}
 
 	// Initialize a new Validator instance.

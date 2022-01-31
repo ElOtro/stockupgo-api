@@ -24,7 +24,6 @@ type Product struct {
 	UnitID      *int64     `json:"unit_id,omitempty"`
 	Unit        *Unit      `json:"unit,omitempty"`
 	UserID      *int64     `json:"user_id,omitempty"`
-	UUID        string     `json:"uuid,omitempty"`
 	DestroyedAt *time.Time `json:"destroyed_at,omitempty"`
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
@@ -54,7 +53,7 @@ func (m ProductModel) GetAll() ([]*Product, error) {
 		              (SELECT id, code, name
 		               FROM units
 		               WHERE units.id = unit_id) row) AS unit, 
-					 user_id, uuid, created_at, updated_at 
+					 user_id, created_at, updated_at 
 			 FROM products 
 			 WHERE destroyed_at IS NULL`
 
@@ -93,7 +92,6 @@ func (m ProductModel) GetAll() ([]*Product, error) {
 			&product.VatRate,
 			&product.Unit,
 			&product.UserID,
-			&product.UUID,
 			&product.CreatedAt,
 			&product.UpdatedAt,
 		)
@@ -122,7 +120,7 @@ func (m ProductModel) Insert(product *Product) error {
 			sku, price, vat_rate_id, unit_id, user_id) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, is_active, product_type, name, description, sku, price, 
-		          vat_rate_id, unit_id, user_id, uuid, created_at, updated_at`
+		          vat_rate_id, unit_id, user_id, created_at, updated_at`
 
 	args := []interface{}{
 		product.IsActive,
@@ -148,7 +146,6 @@ func (m ProductModel) Insert(product *Product) error {
 		&product.VatRateID,
 		&product.UnitID,
 		&product.UserID,
-		&product.UUID,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)
@@ -169,7 +166,7 @@ func (m ProductModel) Get(id int64) (*Product, error) {
 		SELECT id, is_active, product_type, name, description, sku, price, 
 	       (SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
 		   (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,  
-		   user_id, uuid, created_at, updated_at 
+		   user_id, created_at, updated_at 
 		FROM products WHERE id = $1`
 
 	// Declare a Product struct to hold the data returned by the query.
@@ -193,7 +190,6 @@ func (m ProductModel) Get(id int64) (*Product, error) {
 		&product.VatRate,
 		&product.Unit,
 		&product.UserID,
-		&product.UUID,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)

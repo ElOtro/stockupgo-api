@@ -10,5 +10,3 @@ CREATE TABLE companies (
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) without time zone NOT NULL DEFAULT NOW()
 );
-
-CREATE INDEX IF NOT EXISTS companies_uuid_index ON companies USING btree (uuid);

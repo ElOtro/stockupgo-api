@@ -1,6 +1,6 @@
 CREATE TABLE contacts (
   id BIGSERIAL PRIMARY KEY,
-  role integer,
+  role integer DEFAULT 1,
   title character varying,
   name character varying,
   phone character varying,

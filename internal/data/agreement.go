@@ -20,7 +20,6 @@ type Agreement struct {
 	Name        string     `json:"name"`
 	CompanyID   int64      `json:"company_id,omitempty"`
 	UserID      *int64     `json:"user_id,omitempty"`
-	UUID        string     `json:"uuid,omitempty"`
 	DestroyedAt *time.Time `json:"destroyed_at,omitempty"`
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
@@ -66,7 +65,7 @@ func (m AgreementModel) GetAll(filters AgreementFilters, pagination Pagination) 
 	}
 
 	query := fmt.Sprintf(`
-				SELECT id, start_at, end_at, name, company_id, user_id, uuid, created_at, updated_at 
+				SELECT id, start_at, end_at, name, company_id, user_id, created_at, updated_at 
 			  	FROM agreements
 				%s
 				ORDER BY %s %s
@@ -103,7 +102,6 @@ func (m AgreementModel) GetAll(filters AgreementFilters, pagination Pagination) 
 			&agreement.Name,
 			&agreement.CompanyID,
 			&agreement.UserID,
-			&agreement.UUID,
 			&agreement.CreatedAt,
 			&agreement.UpdatedAt,
 		)
@@ -173,7 +171,7 @@ func (m AgreementModel) Get(id int64) (*Agreement, error) {
 	}
 
 	// Define the SQL query for retrieving data.
-	query := `SELECT id, start_at, end_at, name, company_id, user_id, uuid, created_at, updated_at 
+	query := `SELECT id, start_at, end_at, name, company_id, user_id, created_at, updated_at 
 	          FROM agreements WHERE id = $1`
 
 	// Declare a Agreement struct to hold the data returned by the query.
@@ -193,7 +191,6 @@ func (m AgreementModel) Get(id int64) (*Agreement, error) {
 		&agreement.Name,
 		&agreement.CompanyID,
 		&agreement.UserID,
-		&agreement.UUID,
 		&agreement.CreatedAt,
 		&agreement.UpdatedAt,
 	)
