@@ -4,11 +4,23 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ElOtro/stockup-api/internal/data"
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
+
+type ProductInput struct {
+	ID          *int64  `json:"id"`
+	IsActive    bool    `json:"is_active"`
+	ProductType int     `json:"product_type"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	SKU         string  `json:"sku"`
+	Price       float64 `json:"price"`
+	VatRateID   *int64  `json:"vat_rate_id"`
+	UnitID      *int64  `json:"unit_id"`
+	UserID      *int64  `json:"user_id"`
+}
 
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
@@ -33,15 +45,7 @@ func (app *application) createProductHandler(w http.ResponseWriter, r *http.Requ
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		IsActive    bool    `json:"is_active"`
-		ProductType int     `json:"product_type"`
-		Name        string  `json:"name"`
-		Description string  `json:"description"`
-		SKU         string  `json:"sku"`
-		Price       float64 `json:"price"`
-		VatRateID   *int64  `json:"vat_rate_id"`
-		UnitID      *int64  `json:"unit_id"`
-		UserID      *int64  `json:"user_id"`
+		Product *ProductInput `json:"product"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -54,16 +58,18 @@ func (app *application) createProductHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var fields = input.Product
+
 	product := &data.Product{
-		IsActive:    input.IsActive,
-		ProductType: input.ProductType,
-		Name:        input.Name,
-		Description: input.Description,
-		SKU:         input.SKU,
-		Price:       input.Price,
-		VatRateID:   input.VatRateID,
-		UnitID:      input.UnitID,
-		UserID:      input.UserID,
+		IsActive:    fields.IsActive,
+		ProductType: fields.ProductType,
+		Name:        fields.Name,
+		Description: fields.Description,
+		SKU:         fields.SKU,
+		Price:       fields.Price,
+		VatRateID:   fields.VatRateID,
+		UnitID:      fields.UnitID,
+		UserID:      fields.UserID,
 	}
 
 	// Initialize a new Validator instance.
@@ -149,16 +155,7 @@ func (app *application) updateProductHandler(w http.ResponseWriter, r *http.Requ
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		IsActive    bool      `json:"is_active"`
-		ProductType int       `json:"product_type"`
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-		SKU         string    `json:"sku"`
-		Price       float64   `json:"price"`
-		VatRateID   *int64    `json:"vat_rate_id"`
-		UnitID      *int64    `json:"unit_id"`
-		UserID      *int64    `json:"user_id"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		Product *ProductInput `json:"product"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -167,15 +164,17 @@ func (app *application) updateProductHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	product.IsActive = input.IsActive
-	product.ProductType = input.ProductType
-	product.Name = input.Name
-	product.Description = input.Description
-	product.SKU = input.SKU
-	product.Price = input.Price
-	product.VatRateID = input.VatRateID
-	product.UnitID = input.UnitID
-	product.UserID = input.UserID
+	var fields = input.Product
+
+	product.IsActive = fields.IsActive
+	product.ProductType = fields.ProductType
+	product.Name = fields.Name
+	product.Description = fields.Description
+	product.SKU = fields.SKU
+	product.Price = fields.Price
+	product.VatRateID = fields.VatRateID
+	product.UnitID = fields.UnitID
+	product.UserID = fields.UserID
 
 	// Validate the updated product record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.

@@ -279,8 +279,8 @@ func (m CompanyModel) Get(id int64) (*Company, error) {
 func (m CompanyModel) Update(company *Company) error {
 	query := `
 		UPDATE companies
-		SET logo = $2, name = $3, full_name = $4, company_type = $5, details = $6, updated_at = NOW() 
-		WHERE id = $7
+		SET logo = $1, name = $2, full_name = $3, company_type = $4, details = $5, updated_at = NOW() 
+		WHERE id = $6
 		RETURNING updated_at`
 
 	// Create an args slice containing the values for the placeholder parameters.

@@ -10,6 +10,16 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type ContactInput struct {
+	Role    int                  `json:"role"`
+	Title   string               `json:"title"`
+	Name    string               `json:"name"`
+	Phone   string               `json:"phone"`
+	Email   string               `json:"email"`
+	StartAt *time.Time           `json:"start_at"`
+	Details *data.ContactDetails `json:"details,omitempty"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listContactsHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,12 +53,7 @@ func (app *application) createContactHandler(w http.ResponseWriter, r *http.Requ
 	}
 	// Declare an anonymous struct to hold the information that we expect to be in the HTTP request body
 	var input struct {
-		Role    int       `json:"role"`
-		Title   string    `json:"title"`
-		Name    string    `json:"name"`
-		Phone   string    `json:"phone"`
-		Email   string    `json:"email"`
-		StartAt time.Time `json:"start_at"`
+		Contact *ContactInput `json:"contact"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -61,14 +66,16 @@ func (app *application) createContactHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var fields = input.Contact
+
 	contact := &data.Contact{
-		CompanyID: companyID,
-		Role:      input.Role,
-		Title:     input.Title,
-		Name:      input.Name,
-		Phone:     input.Phone,
-		Email:     input.Email,
-		StartAt:   &input.StartAt,
+		Role:    fields.Role,
+		Title:   fields.Title,
+		Name:    fields.Name,
+		Phone:   fields.Phone,
+		Email:   fields.Email,
+		StartAt: fields.StartAt,
+		Details: fields.Details,
 	}
 
 	// Initialize a new Validator instance.
@@ -83,7 +90,7 @@ func (app *application) createContactHandler(w http.ResponseWriter, r *http.Requ
 
 	// Call the Insert() method on our model, passing in a pointer to the
 	// validated struct.
-	err = app.models.Contacts.Insert(contact.CompanyID, contact)
+	err = app.models.Contacts.Insert(companyID, contact)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -165,13 +172,7 @@ func (app *application) updateContactHandler(w http.ResponseWriter, r *http.Requ
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		CompanyID int64     `json:"company_id"`
-		Role      int       `json:"role"`
-		Title     string    `json:"title"`
-		Name      string    `json:"name"`
-		Phone     string    `json:"phone"`
-		Email     string    `json:"email"`
-		StartAt   time.Time `json:"start_at"`
+		Contact *ContactInput `json:"contact"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -180,13 +181,16 @@ func (app *application) updateContactHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var fields = input.Contact
+
 	contact.CompanyID = companyID
-	contact.Role = input.Role
-	contact.Title = input.Title
-	contact.Name = input.Name
-	contact.Phone = input.Phone
-	contact.Email = input.Email
-	contact.StartAt = &input.StartAt
+	contact.Role = fields.Role
+	contact.Title = fields.Title
+	contact.Name = fields.Name
+	contact.Phone = fields.Phone
+	contact.Email = fields.Email
+	contact.StartAt = fields.StartAt
+	contact.Details = fields.Details
 
 	// Initialize a new Validator instance.
 	v := validator.New()

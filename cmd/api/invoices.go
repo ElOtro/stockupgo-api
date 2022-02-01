@@ -10,6 +10,17 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type InvoiceInput struct {
+	IsActive       *bool              `json:"is_active"`
+	Date           *time.Time         `json:"date"`
+	Number         *string            `json:"number"`
+	OrganisationID *int64             `json:"organisation_id"`
+	BankAccountID  *int64             `json:"bank_account_id"`
+	CompanyID      *int64             `json:"company_id"`
+	AgreementID    *int64             `json:"agreement_id"`
+	InvoiceItems   []data.InvoiceItem `json:"invoice_items,omitempty"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listInvoicesHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,14 +117,7 @@ func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Requ
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		IsActive       bool               `json:"is_active"`
-		Date           time.Time          `json:"date"`
-		Number         string             `json:"number"`
-		OrganisationID int64              `json:"organisation_id"`
-		BankAccountID  int64              `json:"bank_account_id"`
-		CompanyID      int64              `json:"company_id"`
-		AgreementID    int64              `json:"agreement_id"`
-		InvoiceItems   []data.InvoiceItem `json:"invoice_items,omitempty"`
+		Invoice *InvoiceInput `json:"invoice"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -125,14 +129,16 @@ func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var fields = input.Invoice
+
 	invoice := &data.Invoice{
-		IsActive:       input.IsActive,
-		Date:           input.Date,
-		Number:         input.Number,
-		OrganisationID: input.OrganisationID,
-		BankAccountID:  input.BankAccountID,
-		CompanyID:      input.CompanyID,
-		AgreementID:    input.AgreementID,
+		IsActive:       *fields.IsActive,
+		Date:           *fields.Date,
+		Number:         *fields.Number,
+		OrganisationID: *fields.OrganisationID,
+		BankAccountID:  *fields.BankAccountID,
+		CompanyID:      *fields.CompanyID,
+		AgreementID:    *fields.AgreementID,
 	}
 
 	// Initialize a new Validator instance.
@@ -155,7 +161,7 @@ func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Requ
 
 	// Call the Insert() method on our invoice_items
 	invoiceItems := invoice.InvoiceItems
-	for _, item := range input.InvoiceItems {
+	for _, item := range fields.InvoiceItems {
 
 		invoiceItem := &data.InvoiceItem{
 			ID:           item.ID,
@@ -193,6 +199,7 @@ func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Requ
 			Amount:       invoiceItem.Amount,
 			DiscountRate: invoiceItem.DiscountRate,
 			Discount:     invoiceItem.Discount,
+			Vat:          invoiceItem.Vat,
 			VatRate:      invoiceItem.VatRate,
 			CreatedAt:    invoiceItem.CreatedAt,
 			UpdatedAt:    invoiceItem.UpdatedAt,
@@ -254,13 +261,7 @@ func (app *application) updateInvoiceHandler(w http.ResponseWriter, r *http.Requ
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		IsActive       *bool      `json:"is_active"`
-		Date           *time.Time `json:"date"`
-		Number         *string    `json:"number"`
-		OrganisationID *int64     `json:"organisation_id"`
-		BankAccountID  *int64     `json:"bank_account_id"`
-		CompanyID      *int64     `json:"company_id"`
-		AgreementID    *int64     `json:"agreement_id"`
+		Invoice *InvoiceInput `json:"invoice"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -269,32 +270,34 @@ func (app *application) updateInvoiceHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if input.IsActive != nil {
-		invoice.IsActive = *input.IsActive
+	var fields = input.Invoice
+
+	if fields.IsActive != nil {
+		invoice.IsActive = *fields.IsActive
 	}
 
-	if input.Date != nil {
-		invoice.Date = *input.Date
+	if fields.Date != nil {
+		invoice.Date = *fields.Date
 	}
 
-	if input.Number != nil {
-		invoice.Number = *input.Number
+	if fields.Number != nil {
+		invoice.Number = *fields.Number
 	}
 
-	if input.OrganisationID != nil {
-		invoice.OrganisationID = *input.OrganisationID
+	if fields.OrganisationID != nil {
+		invoice.OrganisationID = *fields.OrganisationID
 	}
 
-	if input.BankAccountID != nil {
-		invoice.BankAccountID = *input.BankAccountID
+	if fields.BankAccountID != nil {
+		invoice.BankAccountID = *fields.BankAccountID
 	}
 
-	if input.CompanyID != nil {
-		invoice.CompanyID = *input.CompanyID
+	if fields.CompanyID != nil {
+		invoice.CompanyID = *fields.CompanyID
 	}
 
-	if input.AgreementID != nil {
-		invoice.AgreementID = *input.AgreementID
+	if fields.AgreementID != nil {
+		invoice.AgreementID = *fields.AgreementID
 	}
 
 	// Validate the updated invoice record, sending the client a 422 Unprocessable Entity

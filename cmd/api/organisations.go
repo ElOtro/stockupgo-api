@@ -4,11 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ElOtro/stockup-api/internal/data"
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
+
+type OrganisationInput struct {
+	Name         *string                  `json:"name"`
+	FullName     *string                  `json:"full_name"`
+	CEO          *string                  `json:"ceo"`
+	CEOTitle     *string                  `json:"ceo_title"`
+	CFO          *string                  `json:"cfo"`
+	CFOTitle     *string                  `json:"cfo_title"`
+	Stamp        *string                  `json:"stamp"`
+	CEOSign      *string                  `json:"ceo_sign"`
+	CFOSign      *string                  `json:"cfo_sign"`
+	IsVatPayer   *bool                    `json:"is_vat_payer"`
+	Details      data.OrganisationDetails `json:"details"`
+	BankAccounts []data.BankAccount       `json:"bank_accounts"`
+}
 
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
@@ -35,18 +49,7 @@ func (app *application) createOrganisationHandler(w http.ResponseWriter, r *http
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		Name         string                   `json:"name"`
-		FullName     string                   `json:"full_name"`
-		CEO          string                   `json:"ceo"`
-		CEOTitle     string                   `json:"ceo_title"`
-		CFO          string                   `json:"cfo"`
-		CFOTitle     string                   `json:"cfo_title"`
-		Stamp        *string                  `json:"stamp"`
-		CEOSign      *string                  `json:"ceo_sign"`
-		CFOSign      *string                  `json:"cfo_sign"`
-		IsVatPayer   bool                     `json:"is_vat_payer"`
-		Details      data.OrganisationDetails `json:"details"`
-		BankAccounts []data.BankAccount       `json:"bank_accounts"`
+		Organisation *OrganisationInput `json:"organisation"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -59,18 +62,20 @@ func (app *application) createOrganisationHandler(w http.ResponseWriter, r *http
 		return
 	}
 
+	var fields = input.Organisation
+
 	organisation := &data.Organisation{
-		Name:       input.Name,
-		FullName:   input.FullName,
-		CEO:        input.CEO,
-		CEOTitle:   input.CEOTitle,
-		CFO:        input.CFO,
-		CFOTitle:   input.CFOTitle,
-		Stamp:      input.Stamp,
-		CEOSign:    input.CEOSign,
-		CFOSign:    input.CFOSign,
-		IsVatPayer: input.IsVatPayer,
-		Details:    &input.Details,
+		Name:       *fields.Name,
+		FullName:   *fields.FullName,
+		CEO:        *fields.CEO,
+		CEOTitle:   *fields.CEOTitle,
+		CFO:        *fields.CFO,
+		CFOTitle:   *fields.CFOTitle,
+		Stamp:      fields.Stamp,
+		CEOSign:    fields.CEOSign,
+		CFOSign:    fields.CFOSign,
+		IsVatPayer: *fields.IsVatPayer,
+		Details:    &fields.Details,
 	}
 
 	// Initialize a new Validator instance.
@@ -86,7 +91,7 @@ func (app *application) createOrganisationHandler(w http.ResponseWriter, r *http
 	// Call the validate function and return a response containing the errors if
 	// any of the checks fail.
 	bankAccounts := organisation.BankAccounts
-	for _, a := range input.BankAccounts {
+	for _, a := range fields.BankAccounts {
 		bankAccount := &data.BankAccount{
 			IsDefault: a.IsDefault,
 			Name:      a.Name,
@@ -191,19 +196,7 @@ func (app *application) updateOrganisationHandler(w http.ResponseWriter, r *http
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		Name        *string                  `json:"name"`
-		FullName    *string                  `json:"full_name"`
-		CEO         *string                  `json:"ceo"`
-		CEOTitle    *string                  `json:"ceo_title"`
-		CFO         *string                  `json:"cfo"`
-		CFOTitle    *string                  `json:"cfo_title"`
-		Stamp       *string                  `json:"stamp"`
-		CEOSign     *string                  `json:"ceo_sign"`
-		CFOSign     *string                  `json:"cfo_sign"`
-		IsVatPayer  bool                     `json:"is_vat_payer"`
-		Details     data.OrganisationDetails `json:"details"`
-		UpdatedAt   time.Time                `json:"updated_at"`
-		DestroyedAt *time.Time               `json:"destroyed_at"`
+		Organisation *OrganisationInput `json:"organisation"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -212,35 +205,37 @@ func (app *application) updateOrganisationHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	if input.Name != nil {
-		organisation.Name = *input.Name
+	var fields = input.Organisation
+
+	if fields.Name != nil {
+		organisation.Name = *fields.Name
 	}
 
-	if input.FullName != nil {
-		organisation.FullName = *input.FullName
+	if fields.FullName != nil {
+		organisation.FullName = *fields.FullName
 	}
 
-	if input.CEO != nil {
-		organisation.CEO = *input.CEO
+	if fields.CEO != nil {
+		organisation.CEO = *fields.CEO
 	}
 
-	if input.CEOTitle != nil {
-		organisation.CEOTitle = *input.CEOTitle
+	if fields.CEOTitle != nil {
+		organisation.CEOTitle = *fields.CEOTitle
 	}
 
-	if input.CFO != nil {
-		organisation.CFO = *input.CFO
+	if fields.CFO != nil {
+		organisation.CFO = *fields.CFO
 	}
 
-	if input.CFOTitle != nil {
-		organisation.CFOTitle = *input.CFOTitle
+	if fields.CFOTitle != nil {
+		organisation.CFOTitle = *fields.CFOTitle
 	}
 
-	organisation.Stamp = input.Stamp
-	organisation.CEOSign = input.CEOSign
-	organisation.CFOSign = input.CFOSign
-	organisation.IsVatPayer = input.IsVatPayer
-	organisation.Details = &input.Details
+	organisation.Stamp = fields.Stamp
+	organisation.CEOSign = fields.CEOSign
+	organisation.CFOSign = fields.CFOSign
+	organisation.IsVatPayer = *fields.IsVatPayer
+	organisation.Details = &fields.Details
 
 	// Validate the updated organisation record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.

@@ -24,6 +24,7 @@ type Product struct {
 	UnitID      *int64     `json:"unit_id,omitempty"`
 	Unit        *Unit      `json:"unit,omitempty"`
 	UserID      *int64     `json:"user_id,omitempty"`
+	User        *User      `json:"user,omitempty"`
 	DestroyedAt *time.Time `json:"destroyed_at,omitempty"`
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
@@ -40,22 +41,13 @@ type ProductModel struct {
 
 func (m ProductModel) GetAll() ([]*Product, error) {
 	// Construct the SQL query to retrieve all movie records.
-	query := `SELECT id, 
-	                 is_active, product_type, name, description, 
-	                 sku, price, 
-					 (SELECT row_to_json(row)
-		 			 FROM
-		              (SELECT id, rate, name
-		               FROM vat_rates
-		               WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
-					 (SELECT row_to_json(row)
-		 			 FROM
-		              (SELECT id, code, name
-		               FROM units
-		               WHERE units.id = unit_id) row) AS unit, 
-					 user_id, created_at, updated_at 
-			 FROM products 
-			 WHERE destroyed_at IS NULL`
+	query := `SELECT id, is_active, product_type, name, description, sku, price, 
+			 	(SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
+			    (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+			    (SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,
+				created_at, updated_at 
+			  FROM products 
+			  WHERE destroyed_at IS NULL`
 
 	// Create a context with a 3-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -119,8 +111,11 @@ func (m ProductModel) Insert(product *Product) error {
 		INSERT INTO products (is_active, product_type, name, description, 
 			sku, price, vat_rate_id, unit_id, user_id) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id, is_active, product_type, name, description, sku, price, 
-		          vat_rate_id, unit_id, user_id, created_at, updated_at`
+		RETURNING id, is_active, product_type, name, description, sku, price,
+			(SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
+			(SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+			(SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,  
+			created_at, updated_at`
 
 	args := []interface{}{
 		product.IsActive,
@@ -143,9 +138,9 @@ func (m ProductModel) Insert(product *Product) error {
 		&product.Description,
 		&product.SKU,
 		&product.Price,
-		&product.VatRateID,
-		&product.UnitID,
-		&product.UserID,
+		&product.VatRate,
+		&product.Unit,
+		&product.User,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)
@@ -165,8 +160,9 @@ func (m ProductModel) Get(id int64) (*Product, error) {
 	query := `
 		SELECT id, is_active, product_type, name, description, sku, price, 
 	       (SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
-		   (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,  
-		   user_id, created_at, updated_at 
+		   (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+		   (SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,   
+		   created_at, updated_at 
 		FROM products WHERE id = $1`
 
 	// Declare a Product struct to hold the data returned by the query.
@@ -189,7 +185,7 @@ func (m ProductModel) Get(id int64) (*Product, error) {
 		&product.Price,
 		&product.VatRate,
 		&product.Unit,
-		&product.UserID,
+		&product.User,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)
@@ -216,7 +212,11 @@ func (m ProductModel) Update(product *Product) error {
 		SET is_active = $1, product_type = $2, name = $3, description = $4, sku = $5, 
 		price = $6, vat_rate_id = $7, unit_id = $8, updated_at = NOW() 
 		WHERE id = $9
-		RETURNING updated_at`
+		RETURNING
+			(SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
+			(SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+			(SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,  
+		updated_at`
 
 	// Create an args slice containing the values for the placeholder parameters.
 	args := []interface{}{
@@ -233,7 +233,12 @@ func (m ProductModel) Update(product *Product) error {
 
 	// Use the QueryRow() method to execute the query, passing in the args slice as a
 	// variadic parameter and scanning the new version value into the movie struct.
-	return m.DB.QueryRow(context.Background(), query, args...).Scan(&product.UpdatedAt)
+	return m.DB.QueryRow(context.Background(), query, args...).Scan(
+		&product.VatRate,
+		&product.Unit,
+		&product.User,
+		&product.UpdatedAt,
+	)
 }
 
 // Add method for deleting a specific record from the products table.

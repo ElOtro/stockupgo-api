@@ -10,21 +10,27 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+// ContactDetails type details
+type ContactDetails struct {
+	Telegram string `json:"telegram"`
+}
+
 // Contact type details
 type Contact struct {
-	ID          int64      `json:"id"`
-	Role        int        `json:"role"`
-	Title       string     `json:"title"`
-	Name        string     `json:"name"`
-	Phone       string     `json:"phone"`
-	Email       string     `json:"email"`
-	StartAt     *time.Time `json:"start_at"`
-	Sign        *string    `json:"sign,omitempty"`
-	CompanyID   int64      `json:"company_id,omitempty"`
-	UserID      int64      `json:"user_id,omitempty"`
-	DestroyedAt *time.Time `json:"destroyed_at,omitempty"`
-	CreatedAt   *time.Time `json:"created_at,omitempty"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
+	ID          int64           `json:"id"`
+	Role        int             `json:"role"`
+	Title       string          `json:"title"`
+	Name        string          `json:"name"`
+	Phone       string          `json:"phone"`
+	Email       string          `json:"email"`
+	StartAt     *time.Time      `json:"start_at"`
+	Sign        *string         `json:"sign,omitempty"`
+	CompanyID   int64           `json:"company_id,omitempty"`
+	UserID      int64           `json:"user_id,omitempty"`
+	Details     *ContactDetails `json:"details,omitempty"`
+	DestroyedAt *time.Time      `json:"destroyed_at,omitempty"`
+	CreatedAt   *time.Time      `json:"created_at,omitempty"`
+	UpdatedAt   *time.Time      `json:"updated_at,omitempty"`
 }
 
 func ValidateContact(v *validator.Validator, contact *Contact) {
@@ -41,7 +47,7 @@ type ContactModel struct {
 func (m ContactModel) GetAll(companyID int64) ([]*Contact, error) {
 	// Construct the SQL query to retrieve all movie records.
 	query := `
-		SELECT id, role, title, name, phone, email, start_at, created_at, updated_at 
+		SELECT id, role, title, name, phone, email, start_at, details, created_at, updated_at 
 		FROM contacts 
 		WHERE company_id = $1`
 
@@ -77,6 +83,7 @@ func (m ContactModel) GetAll(companyID int64) ([]*Contact, error) {
 			&contact.Phone,
 			&contact.Email,
 			&contact.StartAt,
+			&contact.Details,
 			&contact.CreatedAt,
 			&contact.UpdatedAt,
 		)
@@ -101,9 +108,9 @@ func (m ContactModel) GetAll(companyID int64) ([]*Contact, error) {
 func (m ContactModel) Insert(companyID int64, contact *Contact) error {
 	// Define the SQL query for inserting a new record
 	query := `
-		INSERT INTO contacts (company_id, role, title, name, phone, email, start_at) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, role, title, name, phone, email, start_at, created_at, updated_at`
+		INSERT INTO contacts (company_id, role, title, name, phone, email, start_at, details) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, role, title, name, phone, email, start_at, details, created_at, updated_at`
 
 	args := []interface{}{
 		companyID,
@@ -113,6 +120,7 @@ func (m ContactModel) Insert(companyID int64, contact *Contact) error {
 		contact.Phone,
 		contact.Email,
 		contact.StartAt,
+		contact.Details,
 	}
 
 	// Use the QueryRow() method to execute the SQL query on our connection pool
@@ -124,6 +132,7 @@ func (m ContactModel) Insert(companyID int64, contact *Contact) error {
 		&contact.Phone,
 		&contact.Email,
 		&contact.StartAt,
+		&contact.Details,
 		&contact.CreatedAt,
 		&contact.UpdatedAt,
 	)
@@ -138,7 +147,7 @@ func (m ContactModel) Get(companyID int64, id int64) (*Contact, error) {
 
 	// Define the SQL query for retrieving data.
 	query := `
-		SELECT id, role, title, name, phone, email, start_at, created_at, updated_at 
+		SELECT id, role, title, name, phone, email, start_at, details, created_at, updated_at 
 		FROM contacts 
 		WHERE company_id = $1 AND id = $2`
 
@@ -162,6 +171,7 @@ func (m ContactModel) Get(companyID int64, id int64) (*Contact, error) {
 		&contact.Phone,
 		&contact.Email,
 		&contact.StartAt,
+		&contact.Details,
 		&contact.CreatedAt,
 		&contact.UpdatedAt,
 	)
@@ -186,8 +196,8 @@ func (m ContactModel) Get(companyID int64, id int64) (*Contact, error) {
 func (m ContactModel) Update(contact *Contact) error {
 	query := `
 		UPDATE contacts
-		SET role = $1, title = $2, name = $3, phone = $4, email = $5, start_at = $6, updated_at = NOW() 
-		WHERE id = $7
+		SET role = $1, title = $2, name = $3, phone = $4, email = $5, start_at = $6, details = $7, updated_at = NOW() 
+		WHERE id = $8
 		RETURNING updated_at`
 
 	// Create an args slice containing the values for the placeholder parameters.
@@ -198,6 +208,7 @@ func (m ContactModel) Update(contact *Contact) error {
 		contact.Phone,
 		contact.Email,
 		contact.StartAt,
+		contact.Details,
 		contact.ID,
 	}
 

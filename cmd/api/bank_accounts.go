@@ -10,6 +10,13 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type BankAccountInput struct {
+	IsDefault bool                     `json:"is_default,omitempty"`
+	Name      string                   `json:"name"`
+	Details   *data.BankAccountDetails `json:"details,omitempty"`
+	UpdatedAt time.Time                `json:"updated_at"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listBankAccountsHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,10 +50,7 @@ func (app *application) createBankAccountHandler(w http.ResponseWriter, r *http.
 	}
 	// Declare an anonymous struct to hold the information that we expect to be in the HTTP request body
 	var input struct {
-		OrganisationID int64                    `json:"organisation_id"`
-		IsDefault      bool                     `json:"is_default"`
-		Name           string                   `json:"name"`
-		Details        *data.BankAccountDetails `json:"details"`
+		BankAccount *BankAccountInput `json:"bank_account"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -59,11 +63,12 @@ func (app *application) createBankAccountHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
+	var fields = input.BankAccount
+
 	bankAccount := &data.BankAccount{
-		OrganisationID: organisationID,
-		IsDefault:      input.IsDefault,
-		Name:           input.Name,
-		Details:        input.Details,
+		IsDefault: fields.IsDefault,
+		Name:      fields.Name,
+		Details:   fields.Details,
 	}
 
 	// Initialize a new Validator instance.
@@ -78,7 +83,7 @@ func (app *application) createBankAccountHandler(w http.ResponseWriter, r *http.
 
 	// Call the Insert() method on our model, passing in a pointer to the
 	// validated struct.
-	err = app.models.BankAccounts.Insert(bankAccount.OrganisationID, bankAccount)
+	err = app.models.BankAccounts.Insert(organisationID, bankAccount)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -160,10 +165,7 @@ func (app *application) updateBankAccountHandler(w http.ResponseWriter, r *http.
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		IsDefault bool                     `json:"is_default,omitempty"`
-		Name      string                   `json:"name"`
-		Details   *data.BankAccountDetails `json:"details,omitempty"`
-		UpdatedAt time.Time                `json:"updated_at"`
+		BankAccount *BankAccountInput `json:"bank_account"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -172,10 +174,11 @@ func (app *application) updateBankAccountHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	bankAccount.OrganisationID = organisationID
-	bankAccount.IsDefault = input.IsDefault
-	bankAccount.Name = input.Name
-	bankAccount.Details = input.Details
+	var fields = input.BankAccount
+
+	bankAccount.IsDefault = fields.IsDefault
+	bankAccount.Name = fields.Name
+	bankAccount.Details = fields.Details
 
 	// Initialize a new Validator instance.
 	v := validator.New()

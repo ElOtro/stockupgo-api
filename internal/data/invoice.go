@@ -26,13 +26,14 @@ type Invoice struct {
 	Amount         float64        `json:"amount"`
 	Discount       float64        `json:"discount"`
 	Vat            float64        `json:"vat"`
-	UserID         *int64         `json:"user_id,omitempty"`
+	UserID         int64          `json:"user_id,omitempty"`
 	UUID           string         `json:"uuid,omitempty"`
 	DestroyedAt    *time.Time     `json:"destroyed_at,omitempty"`
 	Organisation   *Organisation  `json:"organisation,omitempty"`
 	BankAccount    *BankAccount   `json:"bank_account,omitempty"`
 	Company        *Company       `json:"company,omitempty"`
 	Agreement      *Agreement     `json:"agreement,omitempty"`
+	User           *User          `json:"user,omitempty"`
 	InvoiceItems   []*InvoiceItem `json:"invoice_items,omitempty"`
 	CreatedAt      *time.Time     `json:"created_at,omitempty"`
 	UpdatedAt      *time.Time     `json:"updated_at,omitempty"`
@@ -94,8 +95,9 @@ func (m InvoiceModel) GetAll(filters InvoiceFilters, pagination Pagination) ([]*
 		(SELECT row_to_json(row) FROM (SELECT id, name FROM organisations WHERE organisations.id = organisation_id) row) AS organisation,
 		(SELECT row_to_json(row) FROM (SELECT id, name FROM bank_accounts WHERE bank_accounts.id = bank_account_id) row) AS bank_account,
 		(SELECT row_to_json(row) FROM (SELECT id, name FROM companies WHERE companies.id = company_id) row) AS company,
-		(SELECT row_to_json(row) FROM (SELECT id, name FROM agreements WHERE agreements.id = agreement_id) row) AS agreement,   
-		user_id, uuid, created_at, updated_at 
+		(SELECT row_to_json(row) FROM (SELECT id, name FROM agreements WHERE agreements.id = agreement_id) row) AS agreement,
+		(SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,   
+		uuid, created_at, updated_at 
 	FROM invoices 
 	%s
 	ORDER BY %s %s
@@ -137,7 +139,7 @@ func (m InvoiceModel) GetAll(filters InvoiceFilters, pagination Pagination) ([]*
 			&invoice.BankAccount,
 			&invoice.Company,
 			&invoice.Agreement,
-			&invoice.UserID,
+			&invoice.User,
 			&invoice.UUID,
 			&invoice.CreatedAt,
 			&invoice.UpdatedAt,
@@ -232,15 +234,12 @@ func (m InvoiceModel) Get(id int64) (*Invoice, error) {
 	// Define the SQL query for retrieving data.
 	query := `
 	SELECT id, is_active, date, number, amount, discount, vat, 
-		organisation_id,
 		(SELECT row_to_json(row) FROM (SELECT id, name FROM organisations WHERE organisations.id = organisation_id) row) AS organisation,
-		bank_account_id,
 		(SELECT row_to_json(row) FROM (SELECT id, name FROM bank_accounts WHERE bank_accounts.id = bank_account_id) row) AS bank_account,
-		company_id,
 		(SELECT row_to_json(row) FROM (SELECT id, name FROM companies WHERE companies.id = company_id) row) AS company,
-		agreement_id,
-		(SELECT row_to_json(row) FROM (SELECT id, name FROM agreements WHERE agreements.id = agreement_id) row) AS agreement,   
-		user_id, uuid, created_at, updated_at    
+		(SELECT row_to_json(row) FROM (SELECT id, name FROM agreements WHERE agreements.id = agreement_id) row) AS agreement,
+		(SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,   
+		uuid, created_at, updated_at    
 	FROM invoices WHERE id = $1`
 
 	// Declare a Invoice struct to hold the data returned by the query.
@@ -261,15 +260,11 @@ func (m InvoiceModel) Get(id int64) (*Invoice, error) {
 		&invoice.Amount,
 		&invoice.Discount,
 		&invoice.Vat,
-		&invoice.OrganisationID,
 		&invoice.Organisation,
-		&invoice.BankAccountID,
 		&invoice.BankAccount,
-		&invoice.CompanyID,
 		&invoice.Company,
-		&invoice.AgreementID,
 		&invoice.Agreement,
-		&invoice.UserID,
+		&invoice.User,
 		&invoice.UUID,
 		&invoice.CreatedAt,
 		&invoice.UpdatedAt,

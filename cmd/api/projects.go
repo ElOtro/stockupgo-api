@@ -10,6 +10,12 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type ProjectInput struct {
+	OrganisationID int64      `json:"organisation_id"`
+	Name           string     `json:"name"`
+	UpdatedAt      *time.Time `json:"updated_at"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listProjectsHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,8 +39,7 @@ func (app *application) createProjectHandler(w http.ResponseWriter, r *http.Requ
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		OrganisationID int64  `json:"organisation_id"`
-		Name           string `json:"name"`
+		Project *ProjectInput `json:"project"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -47,9 +52,11 @@ func (app *application) createProjectHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var fields = input.Project
+
 	project := &data.Project{
-		OrganisationID: input.OrganisationID,
-		Name:           input.Name,
+		OrganisationID: fields.OrganisationID,
+		Name:           fields.Name,
 	}
 
 	// Initialize a new Validator instance.
@@ -135,9 +142,7 @@ func (app *application) updateProjectHandler(w http.ResponseWriter, r *http.Requ
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		OrganisationID int64     `json:"organisation_id"`
-		Name           string    `json:"name"`
-		UpdatedAt      time.Time `json:"updated_at"`
+		Project *ProjectInput `json:"project"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -146,8 +151,9 @@ func (app *application) updateProjectHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	project.OrganisationID = input.OrganisationID
-	project.Name = input.Name
+	var fields = input.Project
+
+	project.Name = fields.Name
 
 	// Validate the updated project record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.

@@ -10,6 +10,15 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type AgreementInput struct {
+	StartAt   *time.Time `json:"start_at"`
+	EndAt     *time.Time `json:"end_at"`
+	Name      string     `json:"name"`
+	CompanyID int64      `json:"company_id"`
+	UserID    *int64     `json:"user_id"`
+	UpdatedAt time.Time  `json:"updated_at"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listAgreementsHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,11 +78,7 @@ func (app *application) createAgreementHandler(w http.ResponseWriter, r *http.Re
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		StartAt   *time.Time `json:"start_at"`
-		EndAt     *time.Time `json:"end_at"`
-		Name      string     `json:"name"`
-		CompanyID int64      `json:"company_id"`
-		UserID    *int64     `json:"user_id"`
+		Agreement *AgreementInput `json:"agreement"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -86,12 +91,14 @@ func (app *application) createAgreementHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	var fields = input.Agreement
+
 	agreement := &data.Agreement{
-		StartAt:   input.StartAt,
-		EndAt:     input.EndAt,
-		Name:      input.Name,
-		CompanyID: input.CompanyID,
-		UserID:    input.UserID,
+		StartAt:   fields.StartAt,
+		EndAt:     fields.EndAt,
+		Name:      fields.Name,
+		CompanyID: fields.CompanyID,
+		UserID:    fields.UserID,
 	}
 
 	// Initialize a new Validator instance.
@@ -177,12 +184,7 @@ func (app *application) updateAgreementHandler(w http.ResponseWriter, r *http.Re
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		StartAt   *time.Time `json:"start_at"`
-		EndAt     *time.Time `json:"end_at"`
-		Name      string     `json:"name"`
-		CompanyID int64      `json:"company_id"`
-		UserID    *int64     `json:"user_id"`
-		UpdatedAt time.Time  `json:"updated_at"`
+		Agreement *AgreementInput `json:"agreement"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -191,11 +193,13 @@ func (app *application) updateAgreementHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	agreement.StartAt = input.StartAt
-	agreement.EndAt = input.EndAt
-	agreement.Name = input.Name
-	agreement.CompanyID = input.CompanyID
-	agreement.UserID = input.UserID
+	var fields = input.Agreement
+
+	agreement.StartAt = fields.StartAt
+	agreement.EndAt = fields.EndAt
+	agreement.Name = fields.Name
+	agreement.CompanyID = fields.CompanyID
+	agreement.UserID = fields.UserID
 
 	// Validate the updated agreement record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.

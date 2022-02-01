@@ -32,7 +32,6 @@ type BankAccount struct {
 }
 
 func ValidateBankAccount(v *validator.Validator, bankAccount *BankAccount) {
-	v.Check(bankAccount.OrganisationID != 0, "organisation_id", "must be provided")
 	v.Check(bankAccount.Name != "", "bank_accounts name", "must be provided")
 }
 

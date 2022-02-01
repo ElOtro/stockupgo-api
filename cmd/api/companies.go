@@ -10,6 +10,15 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type CompanyInput struct {
+	Name        string              `json:"name"`
+	FullName    string              `json:"full_name"`
+	CompanyType int                 `json:"company_type"`
+	Details     data.CompanyDetails `json:"details"`
+	Contacts    []data.Contact      `json:"contacts"`
+	UpdatedAt   *time.Time          `json:"updated_at,omitempty"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listCompaniesHandler(w http.ResponseWriter, r *http.Request) {
@@ -92,12 +101,7 @@ func (app *application) createCompanyHandler(w http.ResponseWriter, r *http.Requ
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		OrganisationID int64               `json:"organisation_id"`
-		Name           string              `json:"name"`
-		FullName       string              `json:"full_name"`
-		CompanyType    int                 `json:"company_type"`
-		Details        data.CompanyDetails `json:"details"`
-		Contacts       []data.Contact      `json:"contacts"`
+		Company *CompanyInput `json:"company"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -110,11 +114,13 @@ func (app *application) createCompanyHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var fields = input.Company
+
 	company := &data.Company{
-		Name:        input.Name,
-		FullName:    input.FullName,
-		CompanyType: input.CompanyType,
-		Details:     &input.Details,
+		Name:        fields.Name,
+		FullName:    fields.FullName,
+		CompanyType: fields.CompanyType,
+		Details:     &fields.Details,
 	}
 
 	// Initialize a new Validator instance.
@@ -130,7 +136,7 @@ func (app *application) createCompanyHandler(w http.ResponseWriter, r *http.Requ
 	// Call the validate function and return a response containing the errors if
 	// any of the checks fail.
 	contacts := company.Contacts
-	for _, c := range input.Contacts {
+	for _, c := range input.Company.Contacts {
 		contact := &data.Contact{
 			Role:    c.Role,
 			Title:   c.Title,
@@ -238,12 +244,7 @@ func (app *application) updateCompanyHandler(w http.ResponseWriter, r *http.Requ
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		OrganisationID int64               `json:"organisation_id"`
-		Name           string              `json:"name"`
-		FullName       string              `json:"full_name"`
-		CompanyType    int                 `json:"company_type"`
-		Details        data.CompanyDetails `json:"details"`
-		UpdatedAt      time.Time           `json:"updated_at"`
+		Company *CompanyInput `json:"company"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -252,10 +253,12 @@ func (app *application) updateCompanyHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	company.Name = input.Name
-	company.FullName = input.FullName
-	company.CompanyType = input.CompanyType
-	company.Details = &input.Details
+	var fields = input.Company
+
+	company.Name = fields.Name
+	company.FullName = fields.FullName
+	company.CompanyType = fields.CompanyType
+	company.Details = &fields.Details
 
 	// Validate the updated company record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.

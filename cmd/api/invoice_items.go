@@ -9,6 +9,21 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type InvoiceItemInput struct {
+	InvoiceID    int64    `json:"invoice_id,omitempty"`
+	Position     *int     `json:"position"`
+	ProductID    *int64   `json:"product_id,omitempty"`
+	Description  *string  `json:"description"`
+	UnitID       *int64   `json:"unit_id,omitempty"`
+	Quantity     *float64 `json:"quantity"`
+	Price        *float64 `json:"price"`
+	Amount       *float64 `json:"amount"`
+	DiscountRate *int     `json:"discount_rate"`
+	Discount     *float64 `json:"discount"`
+	VatRateID    *int64   `json:"vat_rate_id,omitempty"`
+	Vat          *float64 `json:"vat,omitempty"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listInvoiceItemsHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,18 +83,7 @@ func (app *application) createInvoiceItemHandler(w http.ResponseWriter, r *http.
 
 	// Declare an anonymous struct to hold the information that we expect to be in the HTTP request body
 	var input struct {
-		InvoiceID    int64   `json:"invoice_id,omitempty"`
-		Position     int     `json:"position"`
-		ProductID    int64   `json:"product_id,omitempty"`
-		Description  string  `json:"description"`
-		UnitID       int64   `json:"unit_id,omitempty"`
-		Quantity     float64 `json:"quantity"`
-		Price        float64 `json:"price"`
-		Amount       float64 `json:"amount"`
-		DiscountRate int     `json:"discount_rate"`
-		Discount     float64 `json:"discount"`
-		VatRateID    int64   `json:"vat_rate_id,omitempty"`
-		Vat          float64 `json:"vat,omitempty"`
+		InvoiceItem *InvoiceItemInput `json:"invoice_item"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -92,21 +96,23 @@ func (app *application) createInvoiceItemHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	input.InvoiceID = invoiceID
+	var fields = input.InvoiceItem
+
+	fields.InvoiceID = invoiceID
 
 	invoiceItem := &data.InvoiceItem{
-		InvoiceID:    input.InvoiceID,
-		Position:     input.Position,
-		ProductID:    input.ProductID,
-		Description:  input.Description,
-		UnitID:       input.UnitID,
-		Quantity:     input.Quantity,
-		Price:        input.Price,
-		Amount:       input.Amount,
-		DiscountRate: input.DiscountRate,
-		Discount:     input.Discount,
-		VatRateID:    input.VatRateID,
-		Vat:          input.Vat,
+		InvoiceID:    fields.InvoiceID,
+		Position:     *fields.Position,
+		ProductID:    *fields.ProductID,
+		Description:  *fields.Description,
+		UnitID:       *fields.UnitID,
+		Quantity:     *fields.Quantity,
+		Price:        *fields.Price,
+		Amount:       *fields.Amount,
+		DiscountRate: *fields.DiscountRate,
+		Discount:     *fields.Discount,
+		VatRateID:    *fields.VatRateID,
+		Vat:          *fields.Vat,
 	}
 
 	// Initialize a new Validator instance.
@@ -250,17 +256,7 @@ func (app *application) updateInvoiceItemHandler(w http.ResponseWriter, r *http.
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		Position     *int     `json:"position"`
-		ProductID    *int64   `json:"product_id"`
-		Description  *string  `json:"description"`
-		UnitID       *int64   `json:"unit_id"`
-		Quantity     *float64 `json:"quantity"`
-		Price        *float64 `json:"price"`
-		Amount       *float64 `json:"amount"`
-		DiscountRate *int     `json:"discount_rate"`
-		Discount     *float64 `json:"discount"`
-		VatRateID    *int64   `json:"vat_rate_id"`
-		Vat          *float64 `json:"vat"`
+		InvoiceItem *InvoiceItemInput `json:"invoice_item"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -269,48 +265,50 @@ func (app *application) updateInvoiceItemHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if input.Position != nil {
-		invoiceItem.Position = *input.Position
+	var fields = input.InvoiceItem
+
+	if fields.Position != nil {
+		invoiceItem.Position = *fields.Position
 	}
 
-	if input.ProductID != nil {
-		invoiceItem.ProductID = *input.ProductID
+	if fields.ProductID != nil {
+		invoiceItem.ProductID = *fields.ProductID
 	}
 
-	if input.Description != nil {
-		invoiceItem.Description = *input.Description
+	if fields.Description != nil {
+		invoiceItem.Description = *fields.Description
 	}
 
-	if input.UnitID != nil {
-		invoiceItem.UnitID = *input.UnitID
+	if fields.UnitID != nil {
+		invoiceItem.UnitID = *fields.UnitID
 	}
 
-	if input.Quantity != nil {
-		invoiceItem.Quantity = *input.Quantity
+	if fields.Quantity != nil {
+		invoiceItem.Quantity = *fields.Quantity
 	}
 
-	if input.Price != nil {
-		invoiceItem.Price = *input.Price
+	if fields.Price != nil {
+		invoiceItem.Price = *fields.Price
 	}
 
-	if input.Amount != nil {
-		invoiceItem.Amount = *input.Amount
+	if fields.Amount != nil {
+		invoiceItem.Amount = *fields.Amount
 	}
 
-	if input.DiscountRate != nil {
-		invoiceItem.DiscountRate = *input.DiscountRate
+	if fields.DiscountRate != nil {
+		invoiceItem.DiscountRate = *fields.DiscountRate
 	}
 
-	if input.Discount != nil {
-		invoiceItem.Discount = *input.Discount
+	if fields.Discount != nil {
+		invoiceItem.Discount = *fields.Discount
 	}
 
-	if input.VatRateID != nil {
-		invoiceItem.VatRateID = *input.VatRateID
+	if fields.VatRateID != nil {
+		invoiceItem.VatRateID = *fields.VatRateID
 	}
 
-	if input.Vat != nil {
-		invoiceItem.Vat = *input.Vat
+	if fields.Vat != nil {
+		invoiceItem.Vat = *fields.Vat
 	}
 
 	// Initialize a new Validator instance.
@@ -331,7 +329,7 @@ func (app *application) updateInvoiceItemHandler(w http.ResponseWriter, r *http.
 	}
 
 	// Update totals in the invoice
-	err = app.models.Invoices.UpdateTotals(invoiceItem.InvoiceID)
+	err = app.models.Invoices.UpdateTotals(invoiceID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

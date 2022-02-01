@@ -24,7 +24,7 @@ type InvoiceItem struct {
 	DiscountRate int        `json:"discount_rate"`
 	Discount     float64    `json:"discount"`
 	VatRateID    int64      `json:"vat_rate_id,omitempty"`
-	Vat          float64    `json:"vat,omitempty"`
+	Vat          float64    `json:"vat"`
 	Product      *Product   `json:"product"`
 	Unit         *Unit      `json:"unit"`
 	VatRate      *VatRate   `json:"vat_rate"`
@@ -57,7 +57,7 @@ func (m InvoiceItemModel) GetAll(invoiceID int64) ([]*InvoiceItem, error) {
 				(SELECT id, code, name
 				FROM units
 				WHERE units.id = unit_id) row) AS unit, 
-		quantity, price, amount, discount_rate, discount,
+		quantity, price, amount, discount_rate, discount, vat,
 		(SELECT row_to_json(row)
 				FROM
 				(SELECT id, name
@@ -102,6 +102,7 @@ func (m InvoiceItemModel) GetAll(invoiceID int64) ([]*InvoiceItem, error) {
 			&invoiceItem.Amount,
 			&invoiceItem.DiscountRate,
 			&invoiceItem.Discount,
+			&invoiceItem.Vat,
 			&invoiceItem.VatRate,
 			&invoiceItem.CreatedAt,
 			&invoiceItem.UpdatedAt,
@@ -135,7 +136,7 @@ func (m InvoiceItemModel) Insert(invoiceID int64, invoiceItem *InvoiceItem) erro
 		          (SELECT row_to_json(row) FROM (SELECT id, name FROM products WHERE products.id = product_id) row) AS product,
 				  (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
 				  (SELECT row_to_json(row) FROM (SELECT id, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate, 
-				  created_at, updated_at`
+				  vat, created_at, updated_at`
 
 	args := []interface{}{
 		invoiceID,
@@ -158,6 +159,7 @@ func (m InvoiceItemModel) Insert(invoiceID int64, invoiceItem *InvoiceItem) erro
 		&invoiceItem.Product,
 		&invoiceItem.Unit,
 		&invoiceItem.VatRate,
+		&invoiceItem.Vat,
 		&invoiceItem.CreatedAt,
 		&invoiceItem.UpdatedAt,
 	)
@@ -172,25 +174,25 @@ func (m InvoiceItemModel) Get(invoiceID int64, id int64) (*InvoiceItem, error) {
 
 	// Define the SQL query for retrieving data.
 	query := `
-		SELECT id, position, product_id,
+		SELECT id, position,
 		(SELECT row_to_json(row)
 				FROM
 				(SELECT id, name
 				FROM products
 				WHERE products.id = product_id) row) AS product, 
-		description, unit_id,
+		description,
 		(SELECT row_to_json(row)
 				FROM
 				(SELECT id, code, name
 				FROM units
 				WHERE units.id = unit_id) row) AS unit, 
-		quantity, price, amount, discount_rate, discount, vat_rate_id,
+		quantity, price, amount, discount_rate, discount,
 		(SELECT row_to_json(row)
 				FROM
 				(SELECT id, name
 				FROM vat_rates
 				WHERE vat_rates.id = vat_rate_id) row) AS vat_rate, 
-		created_at, updated_at 
+		vat, created_at, updated_at 
 		FROM invoice_items 
 		WHERE invoice_id = $1 AND id = $2`
 
@@ -209,18 +211,16 @@ func (m InvoiceItemModel) Get(invoiceID int64, id int64) (*InvoiceItem, error) {
 	err := m.DB.QueryRow(ctx, query, args...).Scan(
 		&invoiceItem.ID,
 		&invoiceItem.Position,
-		&invoiceItem.ProductID,
 		&invoiceItem.Product,
 		&invoiceItem.Description,
-		&invoiceItem.UnitID,
 		&invoiceItem.Unit,
 		&invoiceItem.Quantity,
 		&invoiceItem.Price,
 		&invoiceItem.Amount,
 		&invoiceItem.DiscountRate,
 		&invoiceItem.Discount,
-		&invoiceItem.VatRateID,
 		&invoiceItem.VatRate,
+		&invoiceItem.Vat,
 		&invoiceItem.CreatedAt,
 		&invoiceItem.UpdatedAt,
 	)
@@ -248,7 +248,7 @@ func (m InvoiceItemModel) Update(invoiceItem *InvoiceItem) error {
 		    quantity = $5, price = $6, amount = $7, discount_rate = $8, discount = $9, 
 			vat_rate_id = $10, vat = $11, updated_at = NOW() 
 		WHERE id = $12
-		RETURNING updated_at, 
+		RETURNING vat, updated_at, 
 		          (SELECT row_to_json(row) FROM (SELECT id, name FROM products WHERE products.id = product_id) row) AS product,
 				  (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
 				  (SELECT row_to_json(row) FROM (SELECT id, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate`
@@ -272,6 +272,7 @@ func (m InvoiceItemModel) Update(invoiceItem *InvoiceItem) error {
 	// Use the QueryRow() method to execute the query, passing in the args slice as a
 	// variadic parameter and scanning the new version value into the movie struct.
 	return m.DB.QueryRow(context.Background(), query, args...).Scan(
+		&invoiceItem.Vat,
 		&invoiceItem.UpdatedAt,
 		&invoiceItem.Product,
 		&invoiceItem.Unit,
