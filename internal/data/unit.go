@@ -13,7 +13,6 @@ import (
 // Unit type
 type Unit struct {
 	ID          int64      `json:"id"`
-	Code        string     `json:"code"`
 	Name        string     `json:"name"`
 	DestroyedAt *time.Time `json:"destroyed_at,omitempty"`
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
@@ -21,7 +20,6 @@ type Unit struct {
 }
 
 func ValidateUnit(v *validator.Validator, unit *Unit) {
-	v.Check(unit.Code != "", "code", "must be provided")
 	v.Check(unit.Name != "", "name", "must be provided")
 }
 
@@ -32,7 +30,7 @@ type UnitModel struct {
 
 func (m UnitModel) GetAll() ([]*Unit, error) {
 	// Construct the SQL query to retrieve all movie records.
-	query := "SELECT id, code, name, created_at, updated_at FROM units"
+	query := "SELECT id, name, created_at, updated_at FROM units"
 
 	// Create a context with a 3-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -60,7 +58,6 @@ func (m UnitModel) GetAll() ([]*Unit, error) {
 		// using the pq.Array() adapter on the genres field here.
 		err := rows.Scan(
 			&unit.ID,
-			&unit.Code,
 			&unit.Name,
 			&unit.CreatedAt,
 			&unit.UpdatedAt,
@@ -86,18 +83,16 @@ func (m UnitModel) GetAll() ([]*Unit, error) {
 func (m UnitModel) Insert(unit *Unit) error {
 	// Define the SQL query for inserting a new record
 	query := `
-		INSERT INTO units (code, name) VALUES ($1, $2)
-		RETURNING id, code, name, created_at, updated_at`
+		INSERT INTO units  (name) VALUES ($1)
+		RETURNING id, name, created_at, updated_at`
 
 	args := []interface{}{
-		unit.Code,
 		unit.Name,
 	}
 
 	// Use the QueryRow() method to execute the SQL query on our connection pool
 	return m.DB.QueryRow(context.Background(), query, args...).Scan(
 		&unit.ID,
-		&unit.Code,
 		&unit.Name,
 		&unit.CreatedAt,
 		&unit.UpdatedAt,
@@ -115,7 +110,7 @@ func (m UnitModel) Get(id int64) (*Unit, error) {
 	}
 
 	// Define the SQL query for retrieving data.
-	query := "SELECT id, code, name, created_at, updated_at FROM units WHERE id = $1"
+	query := "SELECT id, name, created_at, updated_at FROM units WHERE id = $1"
 
 	// Declare a Unit struct to hold the data returned by the query.
 	var unit Unit
@@ -129,7 +124,6 @@ func (m UnitModel) Get(id int64) (*Unit, error) {
 	// Execute the query using the QueryRow() method, passing in the provided id value
 	err := m.DB.QueryRow(ctx, query, id).Scan(
 		&unit.ID,
-		&unit.Code,
 		&unit.Name,
 		&unit.CreatedAt,
 		&unit.UpdatedAt,
@@ -154,13 +148,12 @@ func (m UnitModel) Get(id int64) (*Unit, error) {
 func (m UnitModel) Update(unit *Unit) error {
 	query := `
 		UPDATE units
-		SET code = $1, name = $2, updated_at = NOW() 
-		WHERE id = $3
+		SET name = $1, updated_at = NOW() 
+		WHERE id = $2
 		RETURNING updated_at`
 
 	// Create an args slice containing the values for the placeholder parameters.
 	args := []interface{}{
-		unit.Code,
 		unit.Name,
 		unit.ID,
 	}

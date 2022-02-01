@@ -137,14 +137,8 @@ func (s Seed) CreateVats() error {
 func (s Seed) CreateUnits() error {
 
 	units := []Unit{
-		Unit{
-			Code: "796",
-			Name: "шт.",
-		},
-		Unit{
-			Code: "356",
-			Name: "час",
-		},
+		Unit{Name: "шт."},
+		Unit{Name: "час"},
 	}
 
 	for _, v := range units {
@@ -495,7 +489,7 @@ func (s Seed) Seed() {
 		s.Logger.Err(err)
 	}
 	// create products
-	s.CreateProducts()
+	err = s.CreateProducts()
 	if err != nil {
 		s.Logger.Err(err)
 	}

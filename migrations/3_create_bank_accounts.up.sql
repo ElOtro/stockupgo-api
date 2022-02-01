@@ -9,3 +9,5 @@ CREATE TABLE bank_accounts (
   created_at timestamp(0) without time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) without time zone NOT NULL DEFAULT NOW()
 );
+CREATE INDEX bank_accounts_organisation_id_index ON bank_accounts USING btree (organisation_id);
+CREATE INDEX bank_accounts_destroyed_at_index ON bank_accounts USING btree (destroyed_at);

@@ -14,3 +14,5 @@ CREATE TABLE contacts (
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) without time zone NOT NULL DEFAULT NOW()
 );
+CREATE INDEX contacts_company_id_index ON contacts USING btree (company_id);
+CREATE INDEX contacts_destroyed_at_index ON contacts USING btree (destroyed_at);

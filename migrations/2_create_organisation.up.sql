@@ -16,3 +16,5 @@ CREATE TABLE organisations (
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) without time zone NOT NULL DEFAULT NOW()  
 );
+
+CREATE INDEX organisations_destroyed_at_index ON organisations USING btree (destroyed_at);

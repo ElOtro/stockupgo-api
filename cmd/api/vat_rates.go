@@ -4,11 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ElOtro/stockup-api/internal/data"
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
+
+type VatRateInput struct {
+	IsActive  bool    `json:"is_active"`
+	IsDefault bool    `json:"is_default"`
+	Rate      float64 `json:"rate"`
+	Name      string  `json:"name"`
+}
 
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
@@ -33,10 +39,7 @@ func (app *application) createVatRateHandler(w http.ResponseWriter, r *http.Requ
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		IsActive  bool    `json:"is_active"`
-		IsDefault bool    `json:"is_default"`
-		Rate      float64 `json:"rate"`
-		Name      string  `json:"name"`
+		VatRate *VatRateInput `json:"vat_rate"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -49,11 +52,13 @@ func (app *application) createVatRateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var fields = input.VatRate
+
 	vatRate := &data.VatRate{
-		IsActive:  input.IsActive,
-		IsDefault: input.IsDefault,
-		Rate:      input.Rate,
-		Name:      input.Name,
+		IsActive:  fields.IsActive,
+		IsDefault: fields.IsDefault,
+		Rate:      fields.Rate,
+		Name:      fields.Name,
 	}
 
 	// Initialize a new Validator instance.
@@ -139,11 +144,7 @@ func (app *application) updateVatRateHandler(w http.ResponseWriter, r *http.Requ
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		IsActive  bool      `json:"is_active"`
-		IsDefault bool      `json:"is_default"`
-		Rate      float64   `json:"rate"`
-		Name      string    `json:"name"`
-		UpdatedAt time.Time `json:"updated_at"`
+		VatRate *VatRateInput `json:"vat_rate"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -152,10 +153,12 @@ func (app *application) updateVatRateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	vatRate.IsActive = input.IsActive
-	vatRate.IsDefault = input.IsDefault
-	vatRate.Rate = input.Rate
-	vatRate.Name = input.Name
+	var fields = input.VatRate
+
+	vatRate.IsActive = fields.IsActive
+	vatRate.IsDefault = fields.IsDefault
+	vatRate.Rate = fields.Rate
+	vatRate.Name = fields.Name
 
 	// Validate the updated vatRate record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.

@@ -10,6 +10,11 @@ import (
 	"github.com/ElOtro/stockup-api/internal/validator"
 )
 
+type UnitInput struct {
+	Name      string     `json:"name"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
 func (app *application) listUnitsHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,8 +38,7 @@ func (app *application) createUnitHandler(w http.ResponseWriter, r *http.Request
 	// Declare an anonymous struct to hold the information that we expect to be in the
 	// HTTP request body
 	var input struct {
-		Code string `json:"code"`
-		Name string `json:"name"`
+		Unit *UnitInput `json:"unit"`
 	}
 
 	// Use the new readJSON() helper to decode the request body into the input struct.
@@ -47,9 +51,10 @@ func (app *application) createUnitHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	var fields = input.Unit
+
 	unit := &data.Unit{
-		Code: input.Code,
-		Name: input.Name,
+		Name: fields.Name,
 	}
 
 	// Initialize a new Validator instance.
@@ -135,9 +140,7 @@ func (app *application) updateUnitHandler(w http.ResponseWriter, r *http.Request
 
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
-		Code      string    `json:"code"`
-		Name      string    `json:"name"`
-		UpdatedAt time.Time `json:"updated_at"`
+		Unit *UnitInput `json:"unit"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -146,8 +149,9 @@ func (app *application) updateUnitHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	unit.Code = input.Code
-	unit.Name = input.Name
+	var fields = input.Unit
+
+	unit.Name = fields.Name
 
 	// Validate the updated unit record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.

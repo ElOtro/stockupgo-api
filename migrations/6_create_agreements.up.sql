@@ -9,3 +9,6 @@ CREATE TABLE agreements (
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) without time zone NOT NULL DEFAULT NOW()
 );
+CREATE INDEX agreements_company_id_index ON agreements USING btree (company_id);
+CREATE INDEX agreements_user_id_index ON agreements USING btree (user_id);
+CREATE INDEX agreements_destroyed_at_index ON agreements USING btree (destroyed_at);

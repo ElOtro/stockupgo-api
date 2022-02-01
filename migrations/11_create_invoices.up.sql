@@ -20,6 +20,11 @@ CREATE TABLE invoices (
 );
 
 CREATE INDEX IF NOT EXISTS invoices_date_index ON invoices USING btree (date);
+CREATE INDEX IF NOT EXISTS invoices_organisation_id_index ON invoices USING btree (organisation_id);
+CREATE INDEX IF NOT EXISTS invoices_bank_account_id_index ON invoices USING btree (bank_account_id);
+CREATE INDEX IF NOT EXISTS invoices_company_id_index ON invoices USING btree (company_id);
+CREATE INDEX IF NOT EXISTS invoices_agreement_id_index ON invoices USING btree (agreement_id);
+CREATE INDEX IF NOT EXISTS invoices_project_id_index ON invoices USING btree (project_id);
 CREATE INDEX IF NOT EXISTS invoices_uuid_index ON invoices USING btree (uuid);
 CREATE INDEX IF NOT EXISTS invoices_search_vector_index ON invoices USING GIN (search_vector);
 

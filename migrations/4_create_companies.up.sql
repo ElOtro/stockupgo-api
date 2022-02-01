@@ -10,3 +10,5 @@ CREATE TABLE companies (
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) without time zone NOT NULL DEFAULT NOW()
 );
+CREATE INDEX companies_user_id_index ON companies USING btree (user_id);
+CREATE INDEX companies_destroyed_at_index ON companies USING btree (destroyed_at);
