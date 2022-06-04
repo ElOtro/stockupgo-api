@@ -54,7 +54,7 @@ func (m InvoiceItemModel) GetAll(invoiceID int64) ([]*InvoiceItem, error) {
 		description, 
 		(SELECT row_to_json(row)
 				FROM
-				(SELECT id, code, name
+				(SELECT id, name
 				FROM units
 				WHERE units.id = unit_id) row) AS unit, 
 		quantity, price, amount, discount_rate, discount, vat,
@@ -134,7 +134,7 @@ func (m InvoiceItemModel) Insert(invoiceID int64, invoiceItem *InvoiceItem) erro
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id,
 		          (SELECT row_to_json(row) FROM (SELECT id, name FROM products WHERE products.id = product_id) row) AS product,
-				  (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+				  (SELECT row_to_json(row) FROM (SELECT id, name FROM units WHERE units.id = unit_id) row) AS unit,
 				  (SELECT row_to_json(row) FROM (SELECT id, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate, 
 				  vat, created_at, updated_at`
 
@@ -183,7 +183,7 @@ func (m InvoiceItemModel) Get(invoiceID int64, id int64) (*InvoiceItem, error) {
 		description,
 		(SELECT row_to_json(row)
 				FROM
-				(SELECT id, code, name
+				(SELECT id, name
 				FROM units
 				WHERE units.id = unit_id) row) AS unit, 
 		quantity, price, amount, discount_rate, discount,
@@ -250,7 +250,7 @@ func (m InvoiceItemModel) Update(invoiceItem *InvoiceItem) error {
 		WHERE id = $12
 		RETURNING vat, updated_at, 
 		          (SELECT row_to_json(row) FROM (SELECT id, name FROM products WHERE products.id = product_id) row) AS product,
-				  (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+				  (SELECT row_to_json(row) FROM (SELECT id, name FROM units WHERE units.id = unit_id) row) AS unit,
 				  (SELECT row_to_json(row) FROM (SELECT id, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate`
 
 	// Create an args slice containing the values for the placeholder parameters.

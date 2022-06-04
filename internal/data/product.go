@@ -43,7 +43,7 @@ func (m ProductModel) GetAll() ([]*Product, error) {
 	// Construct the SQL query to retrieve all movie records.
 	query := `SELECT id, is_active, product_type, name, description, sku, price, 
 			 	(SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
-			    (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+			    (SELECT row_to_json(row) FROM (SELECT id, name FROM units WHERE units.id = unit_id) row) AS unit,
 			    (SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,
 				created_at, updated_at 
 			  FROM products 
@@ -113,7 +113,7 @@ func (m ProductModel) Insert(product *Product) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, is_active, product_type, name, description, sku, price,
 			(SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
-			(SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+			(SELECT row_to_json(row) FROM (SELECT id, name FROM units WHERE units.id = unit_id) row) AS unit,
 			(SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,  
 			created_at, updated_at`
 
@@ -160,7 +160,7 @@ func (m ProductModel) Get(id int64) (*Product, error) {
 	query := `
 		SELECT id, is_active, product_type, name, description, sku, price, 
 	       (SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
-		   (SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+		   (SELECT row_to_json(row) FROM (SELECT id, name FROM units WHERE units.id = unit_id) row) AS unit,
 		   (SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,   
 		   created_at, updated_at 
 		FROM products WHERE id = $1`
@@ -214,7 +214,7 @@ func (m ProductModel) Update(product *Product) error {
 		WHERE id = $9
 		RETURNING
 			(SELECT row_to_json(row) FROM (SELECT id, rate, name FROM vat_rates WHERE vat_rates.id = vat_rate_id) row) AS vat_rate,
-			(SELECT row_to_json(row) FROM (SELECT id, code, name FROM units WHERE units.id = unit_id) row) AS unit,
+			(SELECT row_to_json(row) FROM (SELECT id, name FROM units WHERE units.id = unit_id) row) AS unit,
 			(SELECT row_to_json(row) FROM (SELECT id, name FROM users WHERE users.id = user_id) row) AS user,  
 		updated_at`
 
