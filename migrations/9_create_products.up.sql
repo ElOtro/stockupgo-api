@@ -21,9 +21,6 @@ CREATE INDEX products_search_vector_index ON products USING gin (search_vector);
 CREATE INDEX products_destroyed_at_index ON products USING btree (destroyed_at);
 
 CREATE OR REPLACE FUNCTION full_search_for_products() RETURNS trigger AS $$
-declare
-  companies record;
-  agreements record;
 begin
   new.search_vector :=
       setweight(to_tsvector('pg_catalog.simple', coalesce(new.name, '')), 'A') ||
